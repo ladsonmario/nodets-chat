@@ -1,4 +1,4 @@
-const socket = io("http://localhost:5000");
+const socket = io("https://fierce-caverns-94737.herokuapp.com/");
 
 let userList: string[] = [];
 let username: string = '';
