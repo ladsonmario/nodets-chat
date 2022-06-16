@@ -111,6 +111,7 @@ ul, li {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    z-index: 10;
 }
 .menu div {
     display: block;
