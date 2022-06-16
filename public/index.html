@@ -16,15 +16,22 @@
     </div>
     
     <div class="page" id="chat-page">
-        <div class="chat-area">            
+        <div class="chat-area">
+            <input id="input-menu" type="checkbox" autocomplete="off" />
+                <label for="input-menu">
+                    <div class="menu">
+                        <div></div>
+                    </div>
+                </label>                        
             <ul class="chat-list"></ul>
             <ul class="user-list"></ul>
         </div>
         <div class="chat-input">
             <input type="text" id="chat-text-input" placeholder="Digite sua mensagem e aperte ENTER" />
         </div>
-    </div>        
+    </div>            
     
+    <script>var exports = {};</script>
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="/assets/client.js"></script>        
 </body>

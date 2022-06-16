@@ -1,78 +1,22 @@
-import dotenv from 'dotenv';
-import { io } from "socket.io-client";
-
-dotenv.config();
-
-const socket = io(process.env.BASE as string);
+const socket = io("http://localhost:5000");
 
 let userList: string[] = [];
-let userName: string = '';
+let username: string = '';
 
-const loginPage = document.querySelector('#login-page') as HTMLElement;
-const chatPage = document.querySelector('#chat-page') as HTMLElement;
+let loginPage = document.querySelector('#login-page') as HTMLElement;
+let chatPage = document.querySelector('#chat-page') as HTMLElement;
 
-const loginInput = document.querySelector('#login-name-input') as HTMLInputElement;
-const textInput = document.querySelector('#chat-text-input') as HTMLInputElement;
+let loginInput = document.querySelector('#login-name-input') as HTMLInputElement;
+let textInput = document.querySelector('#chat-text-input') as HTMLInputElement;
 
 loginPage.style.display = 'flex';
 chatPage.style.display = 'none';
-
-loginInput.addEventListener('keyup', (event) => {
-    if(event.keyCode === 13) {
-        let name = loginInput.value.trim();
-        
-        if(name != '') {
-            userName = name;            
-            document.title = `Chat (${userName})`;
-
-            socket.emit('join-request', userName);
-        }
-    }
-});
-
-textInput.addEventListener('keyup', (event) => {
-    if(event.keyCode === 13) {
-        let text = textInput.value.trim();
-
-        if(text != '') {
-            addMessage('msg', userName, text);
-            socket.emit('send-msg', text);
-        }
-    }
-});
-
-socket.on('user-ok', (list) => {
-    loginPage.style.display = 'none';
-    chatPage.style.display = 'flex';
-    textInput.focus();
-
-    addMessage('status', null, 'Connected!');   
-
-    userList = list;
-    renderUserList();
-});
-
-socket.on('list-update', (data) => {
-    if(data.joined) {
-        addMessage('status', null, `${data.joined} came into the room.`);
-    }
-    if(data.left) {
-        addMessage('status', null, `${data.left} went out in the room.`);
-    }
-
-    userList = data.list;
-    renderUserList();
-});
-
-socket.on('show-msg', (data) => {
-    addMessage('msg', data.username, data.message);
-});
 
 const renderUserList = () => {    
     let ul = document.querySelector('.user-list') as HTMLElement;
     
     ul.innerHTML = '';
-    userList.forEach(i => {
+    userList.forEach((i: string) => {
         ul.innerHTML += `<li>${i}</li>`;
     });
 }
@@ -85,9 +29,9 @@ const addMessage = (type: string | null, user: string | null, msg: string | null
             ul.innerHTML += `<li class="m-status">${msg}</li>`;
             break;
         case 'msg':
-            if(userName == user)
+            if(username == user) {
                 ul.innerHTML += `<li class="m-text"><span class="me">${user}</span> ${msg}</li>`;
-            else {
+            } else {
                 ul.innerHTML += `<li class="m-text"><span>${user}</span> ${msg}</li>`;
             }
             break;
@@ -96,6 +40,65 @@ const addMessage = (type: string | null, user: string | null, msg: string | null
     ul.scrollTop = ul.scrollHeight; // a message scroll down
 }
 
+loginInput.addEventListener('keyup', (event: KeyboardEvent) => {
+    if(event.keyCode === 13) {
+        let name = loginInput.value.trim();
+        
+        if(name != '') {
+            username = name;            
+            document.title = `Chat (${username})`;
+
+            socket.emit('join-request', username);
+
+            loginInput.value = '';
+        }
+    }
+});
+
+textInput.addEventListener('keyup', (event: KeyboardEvent) => {
+    if(event.keyCode === 13) {
+        let text = textInput.value.trim();
+
+        if(text != '') {
+            addMessage('msg', username, text);
+            socket.emit('send-msg', text);            
+
+            textInput.value = '';
+        }        
+    }
+});
+
+socket.on('user-ok', (list: string[]) => {
+    loginPage.style.display = 'none';
+    chatPage.style.display = 'flex';
+    textInput.focus();
+
+    // addMessage('status', null, 'Connected!');
+
+    userList = list;
+    renderUserList();    
+});
+
+socket.on('user-error', (username: string) => {
+    window.alert(`The name ${username} already exists`);
+});
+
+socket.on('list-update', (data: any) => {
+    if(data.joined) {
+        addMessage('status', null, `${data.joined} came into the room.`);
+    }
+    if(data.left) {
+        addMessage('status', null, `${data.left} went out in the room.`);
+    }
+
+    userList = data.list;
+    renderUserList();
+});
+
+socket.on('show-msg', (data: any) => {
+    addMessage('msg', data.username, data.message);
+});
+
 // connection problem
 socket.on('disconnect', () => {
     addMessage('status', null, 'You have been disconnected!');
@@ -103,14 +106,14 @@ socket.on('disconnect', () => {
     renderUserList();
 });
 
-socket.on('reconnect_error', () => {
+socket.on('connect_error', () => {
     addMessage('status', null, 'Reconnection attempt...');
 });
 
-socket.on('reconnect', () => {
-    addMessage('status', null, 'Reconnected!');
-
-    if(loginInput.value != '') {
-        socket.emit('join-request', loginInput.value);
+socket.on('connect', () => {
+    addMessage('status', null, 'Connected!');
+    
+    if(username != '') {
+        socket.emit('join-request', username);
     }
 });
